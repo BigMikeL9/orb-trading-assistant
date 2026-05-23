@@ -94,6 +94,15 @@ export function SetupHistory({
     setSelectedSetupId(null);
   }
 
+  function handleReloadSelectedSetup() {
+    if (selectedSetup === null) {
+      return;
+    }
+
+    onSelectSetup(selectedSetup);
+    setSelectedSetupId(null);
+  }
+
   return (
     <HistoryCard aria-labelledby="setup-history-title">
       <Header>
@@ -244,7 +253,7 @@ export function SetupHistory({
             <ModalActions>
               <SecondaryButton
                 type="button"
-                onClick={() => onSelectSetup(selectedSetup)}
+                onClick={handleReloadSelectedSetup}
               >
                 Reload setup
               </SecondaryButton>

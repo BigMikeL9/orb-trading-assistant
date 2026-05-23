@@ -11,6 +11,18 @@ function renderSetupEntry() {
   );
 }
 
+function openTab(name: string) {
+  fireEvent.click(screen.getByRole("tab", { name }));
+}
+
+function openSetupReviewTab() {
+  openTab("Setup Review");
+}
+
+function openHistoryTab() {
+  openTab("History");
+}
+
 function fillValidSetup() {
   fireEvent.change(screen.getByLabelText("Symbol"), {
     target: { value: "SPY" },
@@ -49,13 +61,31 @@ describe("SetupEntry local history", () => {
     );
   });
 
+  it("defaults to chart review and supports keyboard tab navigation", () => {
+    renderSetupEntry();
+
+    const chartReviewTab = screen.getByRole("tab", { name: "Chart Review" });
+    expect(chartReviewTab).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tabpanel", { name: "Chart Review" })).toBeVisible();
+
+    fireEvent.keyDown(chartReviewTab, { key: "ArrowRight" });
+
+    expect(screen.getByRole("tab", { name: "Setup Review" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("tabpanel", { name: "Setup Review" })).toBeVisible();
+  });
+
   it("saves a setup and displays it in history", async () => {
     renderSetupEntry();
+    openSetupReviewTab();
     fillValidSetup();
 
     fireEvent.click(
       screen.getByRole("button", { name: "Save evaluated setup" }),
     );
+    openHistoryTab();
 
     const history = screen.getByRole("region", { name: "Setup history" });
 
@@ -72,11 +102,13 @@ describe("SetupEntry local history", () => {
 
   it("opens setup details in a modal", async () => {
     renderSetupEntry();
+    openSetupReviewTab();
     fillValidSetup();
 
     fireEvent.click(
       screen.getByRole("button", { name: "Save evaluated setup" }),
     );
+    openHistoryTab();
     fireEvent.click(
       await screen.findByRole("button", { name: "View / Edit SPY setup" }),
     );
@@ -93,11 +125,13 @@ describe("SetupEntry local history", () => {
 
   it("closes setup details with Escape", async () => {
     renderSetupEntry();
+    openSetupReviewTab();
     fillValidSetup();
 
     fireEvent.click(
       screen.getByRole("button", { name: "Save evaluated setup" }),
     );
+    openHistoryTab();
     fireEvent.click(
       await screen.findByRole("button", { name: "View / Edit SPY setup" }),
     );
@@ -113,6 +147,7 @@ describe("SetupEntry local history", () => {
 
   it("reloads a saved setup into the form", async () => {
     renderSetupEntry();
+    openSetupReviewTab();
     fillValidSetup();
 
     fireEvent.click(
@@ -121,6 +156,7 @@ describe("SetupEntry local history", () => {
     fireEvent.change(screen.getByLabelText("Symbol"), {
       target: { value: "QQQ" },
     });
+    openHistoryTab();
     fireEvent.click(
       await screen.findByRole("button", { name: "View / Edit SPY setup" }),
     );
@@ -131,11 +167,13 @@ describe("SetupEntry local history", () => {
 
   it("deletes a saved setup", async () => {
     renderSetupEntry();
+    openSetupReviewTab();
     fillValidSetup();
 
     fireEvent.click(
       screen.getByRole("button", { name: "Save evaluated setup" }),
     );
+    openHistoryTab();
     fireEvent.click(
       await screen.findByRole("button", { name: "View / Edit SPY setup" }),
     );
@@ -149,11 +187,13 @@ describe("SetupEntry local history", () => {
 
   it("marks outcome and saves journal notes", async () => {
     renderSetupEntry();
+    openSetupReviewTab();
     fillValidSetup();
 
     fireEvent.click(
       screen.getByRole("button", { name: "Save evaluated setup" }),
     );
+    openHistoryTab();
     fireEvent.click(
       await screen.findByRole("button", { name: "View / Edit SPY setup" }),
     );
@@ -194,10 +234,13 @@ describe("SetupEntry local history", () => {
 
     renderSetupEntry();
 
+    openHistoryTab();
     expect(
       await screen.findByText("Saved setup history could not be loaded."),
     ).toBeVisible();
+    openTab("Risk");
     expect(screen.getByText("Risk settings could not be loaded.")).toBeVisible();
+    openSetupReviewTab();
     expect(screen.getByText("Pre-market bias could not be loaded.")).toBeVisible();
   });
 });

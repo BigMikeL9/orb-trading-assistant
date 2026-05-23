@@ -13,6 +13,7 @@ import {
   toRiskSettingsDraft,
   type RiskSettingsDraft,
 } from "@/features/daily-risk-guardrails";
+import { ChartSetReview } from "@/features/chart-review";
 import {
   defaultPreMarketBiasDraft,
   getPreMarketBiasDraft,
@@ -33,6 +34,11 @@ import type { TradeJournal } from "@/domain/orb/models";
 import { defaultRiskSettings } from "@/domain/orb/riskGuardrails";
 import { EvaluationResults } from "../EvaluationResults";
 import { SetupForm } from "../SetupForm";
+import {
+  DashboardTabs,
+  type DashboardTab,
+  type DashboardTabId,
+} from "../DashboardTabs";
 import {
   Description,
   Header,
@@ -83,6 +89,8 @@ function toTradeSetup(draft: SetupDraft): TradeSetup {
 }
 
 export function SetupEntry() {
+  const [activeTabId, setActiveTabId] =
+    useState<DashboardTabId>("chart-review");
   const [draft, setDraft] = useState(initialDraft);
   const [preMarketBiasDraft, setPreMarketBiasDraft] =
     useState<PreMarketBiasDraft>(defaultPreMarketBiasDraft);
@@ -187,6 +195,7 @@ export function SetupEntry() {
 
   function handleSelectSetup(savedSetup: SavedSetup) {
     setDraft(savedSetup.draft);
+    setActiveTabId("setup-review");
     setSaveErrorMessage(null);
   }
 
@@ -243,6 +252,73 @@ export function SetupEntry() {
     }
   }
 
+  const tabs: DashboardTab[] = [
+    {
+      id: "chart-review",
+      label: "Chart Review",
+      content: <ChartSetReview />,
+    },
+    {
+      id: "setup-review",
+      label: "Setup Review",
+      content: (
+        <Layout>
+          <MainColumn>
+            <PreMarketBias
+              draft={preMarketBiasDraft}
+              errorMessage={preMarketBiasErrorMessage}
+              evaluation={preMarketBiasEvaluation}
+              isLoading={isPreMarketBiasLoading}
+              onDraftChange={setPreMarketBiasDraft}
+              onSaveBias={handleSavePreMarketBias}
+            />
+            <SetupForm
+              draft={draft}
+              onDraftChange={setDraft}
+              onSaveSetup={handleSaveSetup}
+              saveErrorMessage={saveErrorMessage}
+            />
+          </MainColumn>
+          <SideColumn>
+            <EvaluationResults
+              evaluation={evaluation}
+              preMarketBias={preMarketBiasEvaluation}
+            />
+          </SideColumn>
+        </Layout>
+      ),
+    },
+    {
+      id: "risk",
+      label: "Risk",
+      content: (
+        <DailyRiskGuardrails
+          draft={riskSettingsDraft}
+          errorMessage={riskSettingsErrorMessage}
+          evaluation={dailyRiskEvaluation}
+          isLoading={isRiskSettingsLoading}
+          settings={riskSettings}
+          onDraftChange={setRiskSettingsDraft}
+          onSaveSettings={handleSaveRiskSettings}
+        />
+      ),
+    },
+    {
+      id: "history",
+      label: "History",
+      content: (
+        <SetupHistory
+          errorMessage={historyErrorMessage}
+          isLoading={isHistoryLoading}
+          savedSetups={savedSetups}
+          onDeleteSetup={handleDeleteSetup}
+          onSaveJournal={handleSaveJournal}
+          onSelectSetup={handleSelectSetup}
+        />
+      ),
+    },
+  ];
+
   return (
     <Page>
       <Header>
@@ -252,47 +328,11 @@ export function SetupEntry() {
           today&apos;s execution list.
         </Description>
       </Header>
-      <Layout>
-        <MainColumn>
-          <PreMarketBias
-            draft={preMarketBiasDraft}
-            errorMessage={preMarketBiasErrorMessage}
-            evaluation={preMarketBiasEvaluation}
-            isLoading={isPreMarketBiasLoading}
-            onDraftChange={setPreMarketBiasDraft}
-            onSaveBias={handleSavePreMarketBias}
-          />
-          <SetupForm
-            draft={draft}
-            onDraftChange={setDraft}
-            onSaveSetup={handleSaveSetup}
-            saveErrorMessage={saveErrorMessage}
-          />
-          <DailyRiskGuardrails
-            draft={riskSettingsDraft}
-            errorMessage={riskSettingsErrorMessage}
-            evaluation={dailyRiskEvaluation}
-            isLoading={isRiskSettingsLoading}
-            settings={riskSettings}
-            onDraftChange={setRiskSettingsDraft}
-            onSaveSettings={handleSaveRiskSettings}
-          />
-          <SetupHistory
-            errorMessage={historyErrorMessage}
-            isLoading={isHistoryLoading}
-            savedSetups={savedSetups}
-            onDeleteSetup={handleDeleteSetup}
-            onSaveJournal={handleSaveJournal}
-            onSelectSetup={handleSelectSetup}
-          />
-        </MainColumn>
-        <SideColumn>
-          <EvaluationResults
-            evaluation={evaluation}
-            preMarketBias={preMarketBiasEvaluation}
-          />
-        </SideColumn>
-      </Layout>
+      <DashboardTabs
+        activeTabId={activeTabId}
+        tabs={tabs}
+        onTabChange={setActiveTabId}
+      />
     </Page>
   );
 }
